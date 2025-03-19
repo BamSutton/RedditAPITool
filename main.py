@@ -2,8 +2,8 @@ import pandas as pd
 import praw
 from Subreddit.Checker import check_subreddit
 import config
-from CSV_creator import createCSVs
 from models import Subreddits, Submissions, Comments
+from CSV_creator import createCSVs
 
 import praw.exceptions
 
@@ -18,8 +18,11 @@ reddit = praw.Reddit(
 )
 # these are the search terms that we care about currently
 # they get fed into the below function "check_subreddit" which finds all of the relevant subreddits (see Checker.py)
-search_terms = ['Autism','neurodivergent','ASD','neurospicy']
-foundSubredditList = check_subreddit(reddit,search_terms)
+search_terms = ['Autism']
+foundSubredditList, private_count = check_subreddit(reddit,search_terms)
+print(f"Total subreddits found: {len(foundSubredditList) + private_count}")
+print(f"Number of private subreddits found: {private_count}")
+print(f"Number of unique subreddits used for data pull: {len(foundSubredditList)}")
 
 # this loops through all of the recently found subreddits from "check_subreddit" and searches for all the top posts
 # across all time with the query term "unmasking" and prints out the URL to that post into the console log
@@ -49,13 +52,18 @@ for subredditname in foundSubredditList:
         submission.comments.replace_more(limit=None)
         for comment in submission.comments.list():
             newComment = Comments(
-                id=comment.id,
-                content=comment.body,
-                poster=comment.author.name if comment.author else "Deleted",
-                score=comment.score,
-                time_created=comment.created_utc,
-            )
+                    id=comment.id,
+                    content=comment.body,
+                    poster=comment.author.name if comment.author else "Deleted",
+                    score=comment.score,
+                    parent_id=comment.parent_id,
+                    time_created=comment.created_utc,
+                )
             newSubmission.commentList.append(newComment)
+        
+        for comment in newSubmission.commentList:
+            newSubmission.commentMap[comment.parent_id.replace("t1_","")].append(comment.id)
+            
         newsubreddit.submissionList.append(newSubmission)
     # print (f"Added {(newsubreddit.submissionList)} posts to subredit: {newsubreddit.name}")
     subredditListData.append(newsubreddit)
@@ -64,18 +72,4 @@ for s in subredditListData:
     for sub in s.submissionList:
         print (f'Number of Comments: {len(sub.commentList)}')
 
-# createCSVs()
-
-
-# print(subredditList)
-
-# def csv_comment_formatter(comment_list):
-
-#     return None
-
-
-# -subreddit-
-# post1-title-selftext    comment1    comment1.1
-#                                     comment1.2
-#                                                 comment1.2.1
-#                         comment2    comment2.1
+createCSVs(subredditListData)
