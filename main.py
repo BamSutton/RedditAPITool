@@ -40,7 +40,8 @@ for subredditname in foundSubredditList:
         subsrcibers= subreddit.subscribers,
     )
     #for submission in subreddit.search("unmasking", sort='top',time_filter='all', limit= None):
-    for submission in subreddit.search("unmasking", sort='top',time_filter='all', limit= 1):
+    for submission in subreddit.search("unmasking", sort='top',time_filter='all', limit= 2):
+        print (submission.permalink)
         newSubmission = Submissions(
             id = submission.id, 
             title=submission.title, 
@@ -62,7 +63,7 @@ for subredditname in foundSubredditList:
             newSubmission.commentList.append(newComment)
         
         for comment in newSubmission.commentList:
-            newSubmission.commentMap[comment.parent_id.replace("t1_","")].append(comment.id)
+            newSubmission.commentMap[comment.parent_id.replace("t1_","")].append(comment)
             
         newsubreddit.submissionList.append(newSubmission)
     # print (f"Added {(newsubreddit.submissionList)} posts to subredit: {newsubreddit.name}")
