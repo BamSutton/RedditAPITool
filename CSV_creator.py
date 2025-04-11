@@ -2,6 +2,7 @@ from datetime import datetime
 from models import *
 import csv
 import pandas as pd
+from collections import defaultdict
 
 def createCSVs(subredditList: list[Subreddits]):
     global csvWriter
