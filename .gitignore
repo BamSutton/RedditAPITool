@@ -1,4 +1,5 @@
 config.py
+founditems.txt
 __pycache__
 *.csv
 /virtualenv

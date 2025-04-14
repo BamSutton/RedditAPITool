@@ -10,7 +10,7 @@ def createCSVs(subredditList: list[Subreddits]):
     subredditHeaders = ["Subreddit Name","Subreddit Description","Subscribers","Time Created"]
     submissionHeaders = ["Post Title", "Post Text", "Post Author", "Post Score", "Time Created", "Comment Thread"]
 
-    csvFile = open('temp.csv','w',encoding='utf-8',newline='')
+    csvFile = open(f'{current_datetime}_AllSubmissions.csv','w',encoding='utf-8',newline='')
     csvWriter = csv.writer(csvFile)
 
     for subredditItem in subredditList:
@@ -31,12 +31,9 @@ def createCSVs(subredditList: list[Subreddits]):
 
 def linemaker(currentComment: Comments, commentMap: defaultdict, currentLine: list):
     currentLine.append(currentComment.content)
-    if commentMap.get(currentComment.id) is None:#iu1uyew
+    if commentMap.get(currentComment.id) is None:
         csvWriter.writerow(currentLine)
-        # print(currentLine)
-        
     else:
-        # print(len(commentMap.get(currentComment.id)))
         for comment in commentMap.get(currentComment.id):
             linemaker(comment, commentMap, currentLine)
 
