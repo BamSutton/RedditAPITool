@@ -1,90 +1,60 @@
 import praw
 from datetime import datetime
 import config
+import os
 
-from models import Subreddits, Submissions, Comments
-from Subreddit.Checker import check_subreddit
-from CSV_creator import createCSVs
-from submission_selector import SubmissionSelector
-from DataFrameCreator import get_reddit_dataframes
+from SubredditChecker import find_subreddits
+from DataFrames import get_reddit_dataframes
+from SampleSelector import create_new_sample
 
-reddit = praw.Reddit(
-    client_id=config.client_id,
-    client_secret=config.client_secret,
-    password=config.password,
-    user_agent="Masking Reddit Scraper v0.0.1",
-    username=config.username,
-)
+def create_save_directory() -> str:
+    try:
+        currentDateTime = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        directory = f'{currentDateTime}_DataFiles'
+        os.mkdir(directory)
+        return directory
+    except FileExistsError:
+        print(f'Directory {directory} already exists')
+    except PermissionError:
+        print(f'Current user does not have permission to create directory')
+    except Exception as e:
+        print(f'Error occurred when trying to create save directory with this error: {e}')
 
-search_terms = ["Autism"]
-foundSubredditList, private_count = check_subreddit(reddit, search_terms)
-print(f"Total subreddits found: {len(foundSubredditList) + private_count}")
-print(f"Number of private subreddits found: {private_count}")
-print(f"Number of unique subreddits used for data pull: {len(foundSubredditList)}")
 
-df_subreddits, df_submissions, df_comments = get_reddit_dataframes(foundSubredditList, "Unmasking")
+def save_subreddit_names(subreddits_list: list, directory):
+    writefile = open(f'{directory}/founditems.txt', 'w')
+    for subreddit in subreddits_list:
+        writefile.write(f'{subreddit.display_name}\n')
+    writefile.flush
+    writefile.close
+    
 
-currentDateTime = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-df_subreddits.to_csv(f'{currentDateTime}_AllSubredditsDataFrame.csv')
-df_submissions.to_csv(f'{currentDateTime}_AllSubmissionsDataFrame.csv')
-df_comments.to_csv(f'{currentDateTime}_AllCommentsDataFrame.csv')
-
-subredditListData: list[Subreddits] = []
-allSubmissionsList: list[Submissions] = []
-count = 0
-for subredditname in foundSubredditList:
-    count += 1
-    subreddit = reddit.subreddit(subredditname)
-    print(f"{count}. --Pulling {subredditname} data--")
-    newsubreddit = Subreddits(
-        id=subreddit.id,
-        name=subreddit.display_name,
-        description=subreddit.description,
-        time_created=subreddit.created_utc,
-        subsrcibers=subreddit.subscribers,
+def main():
+    reddit = praw.Reddit(
+        client_id=config.client_id,
+        client_secret=config.client_secret,
+        username=config.username,
+        password=config.password,
+        user_agent="python:MaskingResearchApp:v0.1 (by /u/kaotickowala)",
+        ratelimit_seconds=840,
     )
-    templist = list(
-        subreddit.search("unmasking", sort="top", time_filter="all", limit=None)
-    )
-    submissionCount = 0
-    for submission in templist:
-        submissionCount += 1
-        # for submission in subreddit.search("unmasking", sort='top',time_filter='all', limit= 20):
-        newSubmission = Submissions(
-            id=submission.id,
-            title=submission.title,
-            content=submission.selftext,
-            score=submission.score,
-            poster=submission.author.name if submission.author else "Deleted",
-            time_created=submission.created_utc,
-        )
-        print(f"Adding new submission {submissionCount} / {len(templist)}")
+    
+    directory = create_save_directory()
+    search_terms = ["Autism"]
 
-        submission.comments.replace_more(limit=None)
-        for comment in submission.comments.list():
-            newComment = Comments(
-                id=comment.id,
-                content=comment.body,
-                poster=comment.author.name if comment.author else "Deleted",
-                score=comment.score,
-                parent_id=comment.parent_id,
-                time_created=comment.created_utc,
-            )
-            newSubmission.commentList.append(newComment)
+    foundSubredditList = find_subreddits(reddit, search_terms)
 
-        for comment in newSubmission.commentList:
-            newSubmission.commentMap[comment.parent_id.replace("t1_", "")].append(
-                comment
-            )
+    df_subreddits, df_submissions, df_comments = get_reddit_dataframes(foundSubredditList, "Unmasking")
 
-        newsubreddit.submissionList.append(newSubmission)
-        allSubmissionsList.append(newSubmission)
+    df_subreddits.to_csv(f'{directory}/AllSubredditsDataFrame.csv')
+    df_submissions.to_csv(f'{directory}/AllSubmissionsDataFrame.csv')
+    df_comments.to_csv(f'{directory}/AllCommentsDataFrame.csv')
+    
+    print(f'Total Subreddits: {df_subreddits.count}')
+    print(f'Total Submissions: {df_submissions.count}')
+    print(f'Total Comments: {df_comments.count}')
 
-    subredditListData.append(newsubreddit)
-for s in subredditListData:
-    print(f"{s.name} post count:{len(s.submissionList)}")
-    for sub in s.submissionList:
-        print(f"Number of Comments: {len(sub.commentList)}")
+    create_new_sample(df_subreddits, df_submissions, df_comments)
 
-createCSVs(subredditListData)
-SubmissionSelector(allSubmissionsList, 2)
+if __name__ == "__main__":
+    main()

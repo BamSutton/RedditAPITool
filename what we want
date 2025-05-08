@@ -1,0 +1,44 @@
+what we want
+
+all of the subreddits associated to the search terms - public only
+    this will have 
+    - Name of subreddit
+    - Description
+    - number of subscribers
+    - when it was created
+
+
+all of the submissions from the those subreddits that use the search term we are looking for
+    this will have
+    - Post title
+    - post content
+    - author of the post
+    - List of comments related to that post
+    - Time created
+    - number of upvotes
+
+    * should this be submission centric? - have the subreddit information inside of this object and make it the bases of the app?
+        would make origizing data based on subreddit a pain
+
+
+
+all of the comments from all of those submissions
+    this will have
+    - comment content
+    - author of comment
+    - upvotes
+    - created
+
+Thoughts around using data frames for the this information? - might be a shit idea though
+
+Things i think i need to know 
+    - How does the tool Pat is using expect to see the data
+    - Do i need to create two different files for this (human readable and application readable)
+
+
+Functions needed?
+    needs to be able to select a random percentage of the total submissions
+        ? is this to be equal across all subreddits run against - or random across all at the same time
+    
+    needs to be able to print these out into a csv
+        probably both human readable and app readable
