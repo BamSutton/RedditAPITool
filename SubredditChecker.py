@@ -1,6 +1,11 @@
 import praw
+from praw.models import Subreddit
 
-def find_subreddits(reddit: praw.Reddit, search_terms: list[str]):
+"""
+Using the list of search terms provided, this will connect to your instance of reddit and search for all matching subreddits
+This will filter out Private subreddits and record the amount found
+"""
+def find_subreddits(reddit: praw.Reddit, search_terms: list[str]) -> list[Subreddit]:
     print(f"pulling subreddit data from search terms: {search_terms}")
     unique_subreddits_set = set()
     private_count = 0
@@ -9,7 +14,8 @@ def find_subreddits(reddit: praw.Reddit, search_terms: list[str]):
         findingSubreddits = reddit.subreddits.search(query=term, limit=None)
         for item in findingSubreddits:
             if item.subreddit_type != 'private' and item.display_name not in unique_subreddits_set: 
-                unique_subreddits_set.add(item)
+                if item.display_name != 'news':
+                    unique_subreddits_set.add(item)
             else:
                 private_count+=1        
     unique_subreddits_list = list(unique_subreddits_set)
