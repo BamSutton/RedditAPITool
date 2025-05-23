@@ -1,60 +1,47 @@
 import praw
+from praw import models
 from datetime import datetime
 import config
-import os
 
 from SubredditChecker import find_subreddits
 from DataFrames import get_reddit_dataframes
-from SampleSelector import create_new_sample
+from SampleSelector import create_new_samples
+from FileCreator import FileCreator
+from constants import search_terms,sample_size
 
-def create_save_directory() -> str:
-    try:
-        currentDateTime = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        directory = f'{currentDateTime}_DataFiles'
-        os.mkdir(directory)
-        return directory
-    except FileExistsError:
-        print(f'Directory {directory} already exists')
-    except PermissionError:
-        print(f'Current user does not have permission to create directory')
-    except Exception as e:
-        print(f'Error occurred when trying to create save directory with this error: {e}')
-
-
-def save_subreddit_names(subreddits_list: list, directory):
-    writefile = open(f'{directory}/founditems.txt', 'w')
-    for subreddit in subreddits_list:
-        writefile.write(f'{subreddit.display_name}\n')
-    writefile.flush
-    writefile.close
-    
 
 def main():
+    #Creates a reddit instance that will be used to pull the data you are after
     reddit = praw.Reddit(
         client_id=config.client_id,
         client_secret=config.client_secret,
         username=config.username,
         password=config.password,
         user_agent="python:MaskingResearchApp:v0.1 (by /u/kaotickowala)",
-        ratelimit_seconds=840,
+        ratelimit_seconds=3600,
     )
     
-    directory = create_save_directory()
-    search_terms = ["Autism"]
+    filecreator = FileCreator()
+    filecreator.create_new_directory()
 
     foundSubredditList = find_subreddits(reddit, search_terms)
+    filecreator.save_subreddit_names(foundSubredditList)
+     
+    dataframeDict = get_reddit_dataframes(foundSubredditList, "Unmasking")
 
-    df_subreddits, df_submissions, df_comments = get_reddit_dataframes(foundSubredditList, "Unmasking")
+    filecreator.save_dataframe(dataframeDict("subreddits"),"All_Subreddits")
+    filecreator.save_dataframe(dataframeDict("submissions"),"All_Submissions")
+    filecreator.save_dataframe(dataframeDict("comments"),"All_Comments")
 
-    df_subreddits.to_csv(f'{directory}/AllSubredditsDataFrame.csv')
-    df_submissions.to_csv(f'{directory}/AllSubmissionsDataFrame.csv')
-    df_comments.to_csv(f'{directory}/AllCommentsDataFrame.csv')
-    
-    print(f'Total Subreddits: {df_subreddits.count}')
-    print(f'Total Submissions: {df_submissions.count}')
-    print(f'Total Comments: {df_comments.count}')
+    print(f'Total Subreddits: {len(dataframeDict("subreddits"))}')
+    print(f'Total Submissions: {len(dataframeDict("submissions"))}')
+    print(f'Total Comments: {len(dataframeDict("comments"))}')
 
-    create_new_sample(df_subreddits, df_submissions, df_comments)
+    sample_dataframe_dict = create_new_samples(dataframeDict, sample_size)
+    filecreator.save_dataframe(sample_dataframe_dict("subreddits"),"sample_Subreddits")
+    filecreator.save_dataframe(sample_dataframe_dict("submissions"),"sample_Submissions")
+    filecreator.save_dataframe(sample_dataframe_dict("comments"),"sample_Comments")
+
 
 if __name__ == "__main__":
     main()
