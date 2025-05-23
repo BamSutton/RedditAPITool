@@ -17,7 +17,7 @@ def main():
         client_secret=config.client_secret,
         username=config.username,
         password=config.password,
-        user_agent="python:MaskingResearchApp:v0.1 (by /u/kaotickowala)",
+        user_agent=f"python:MaskingResearchApp:v0.1 (by /u/{config.username})",
         ratelimit_seconds=3600,
     )
     
