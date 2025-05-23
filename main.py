@@ -7,7 +7,7 @@ from SubredditChecker import find_subreddits
 from DataFrames import get_reddit_dataframes
 from SampleSelector import create_new_samples
 from FileCreator import FileCreator
-from constants import search_terms,sample_size
+from constants import reddit_search_terms, submission_search_terms,sample_size
 
 
 def main():
@@ -24,10 +24,10 @@ def main():
     filecreator = FileCreator()
     filecreator.create_new_directory()
 
-    foundSubredditList = find_subreddits(reddit, search_terms)
+    foundSubredditList = find_subreddits(reddit, reddit_search_terms)
     filecreator.save_subreddit_names(foundSubredditList)
      
-    dataframeDict = get_reddit_dataframes(foundSubredditList, "Unmasking")
+    dataframeDict = get_reddit_dataframes(foundSubredditList, submission_search_terms)
 
     filecreator.save_dataframe(dataframeDict("subreddits"),"All_Subreddits")
     filecreator.save_dataframe(dataframeDict("submissions"),"All_Submissions")

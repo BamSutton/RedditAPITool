@@ -4,5 +4,6 @@ submission_dict = {"ID":[],"Title":[],"Content":[],"Author":[],"Score":[],"Creat
 comment_dict = {"ID":[],"Content":[],"Author":[],"Score":[],"Created":[],"Parent_ID":[],"Submission_ID":[]}
 
 # base data that can be changed if new inputs are required
-search_terms = ["Autism"]
+reddit_search_terms = ["Autism"]
+submission_search_terms = "unmasking"
 sample_size = 0.05
