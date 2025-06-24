@@ -12,7 +12,7 @@ class FileCreator:
     It creates the directories that the files are saved in based off the current Date and Time that the app was run.
     This will save all of the dataframes to csv files with the given name to that directory.
     """
-    global csvWriter
+    
         
     @property
     def directory(self):
@@ -48,7 +48,6 @@ class FileCreator:
     def load_most_recent_run_directory(self):
         last_run_directory = open('last_run_directory.txt','r')
         directory = last_run_directory.readline()
-        print(directory)
         self.directory = directory
         
     def save_most_recent_run_directory(self):
@@ -69,56 +68,58 @@ class FileCreator:
         }
 
     def createHumanReadableCSVs(self, dataframeDict: dict):
-        
-        csvFile = open(f'{self.directory}.csv','w',encoding='utf-8',newline='')
+        global csvWriter
+        csvFile = open(f'{self.directory}HumanReadable.csv','w',encoding='utf-8',newline='')
         csvWriter = csv.writer(csvFile)
         
         for subredditIndex, subreddit in dataframeDict['subreddits'].iterrows():
             currentSubreddit = [["---- New Subreddit ----"]]
             currentSubreddit.append(CSV_subreddit_headers)
             currentSubreddit.append([subreddit['Name'], subreddit['Description'], subreddit['Subscribers'], subreddit['Created']])
-            print(currentSubreddit)
-            # csvWriter.writerows(currentSubreddit)
+            print("Writing Subreddit")
+            csvWriter.writerows(currentSubreddit)
             subreddit_mask = dataframeDict['submissions']['Subreddit_ID'].isin([subreddit['ID']])
             subredditSubmissions = dataframeDict["submissions"][subreddit_mask]
             
             for submissionIndex, submission in subredditSubmissions.iterrows():
-                currentSubmission = []
-                currentSubmission.append(CSV_subreddit_headers)
+                currentSubmission = [["---- New Submission ----"]]
+                currentSubmission.append(CSV_submission_headers)
                 currentSubmission.append([submission['Title'], submission['Content'], submission['Author'], submission['Score'], submission['Created']])
-                print(f'printing Submission: {currentSubmission}')
-                # csvWriter.writerows(currentSubmission)
+                csvWriter.writerows(currentSubmission)
                 submission_mask = dataframeDict['comments']['Parent_ID'].isin([submission['ID']])
                 submissionComments = dataframeDict["comments"][submission_mask]
                 for commentIndex, comment in submissionComments.iterrows():
-                    newline = self.print_children(dataframeDict['comments'], comment, [])
-                    csvWriter.writerows(newline)
+                    if submission['ID'] == 'vgm37m':
+                        print(comment['Content'])
+                    self.print_children(dataframeDict['comments'], comment, [])
+                    
 
-    def print_children(self, comment_df, comment, current_line):
+    def print_children(self, comment_df: dict[pd.DataFrame], comment, current_line):
         #check to see if its an end node - if so then no need to continue deeper
-        current_line.append([comment['Content'],comment['Author'],comment['Score'],comment['Created']])
+        current_line.append(comment['Content'])
+        current_line.append(comment['Author'])
+        current_line.append(comment['Score'])
+        current_line.append(comment['Created'])
         commentmask = comment_df['Parent_ID'].isin([comment['ID']])
-        if commentmask:
+        if commentmask is not None:
             #continue the loop
             childrenCommentDF = comment_df[commentmask]
-            for commentIndex, comment in childrenCommentDF:
-                self.print_children(comment_df, comment, current_line)
-           
-        else:
-            #we are at the end the comment thread and need to print out the line
-            return current_line
+            for commentIndex, nextcomment in childrenCommentDF.iterrows():
+                self.print_children(comment_df, nextcomment, current_line)
         
+        csvWriter.writerow(current_line)
+        current_line.pop()
+        current_line.pop()
+        current_line.pop()
+        current_line.pop()
         
 
         # def linemaker(currentComment: Comments, commentMap: defaultdict, currentLine: list):
         #     currentLine.append(currentComment.content)
         #     if commentMap.get(currentComment.id) is None:
         #         csvWriter.writerow(currentLine)
-                
         #     else:
         #         # print(len(commentMap.get(currentComment.id)))
         #         for comment in commentMap.get(currentComment.id):
         #             linemaker(comment, commentMap, currentLine)
-
         #     currentLine.pop()
-            

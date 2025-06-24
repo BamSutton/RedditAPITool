@@ -10,4 +10,4 @@ CSV_submission_headers = ["Post Title", "Post Text", "Post Author", "Post Score"
 # base data that can be changed if new inputs are required
 reddit_search_terms = ["Autism"]
 submission_search_terms = "unmasking"
-sample_size = 0.05
+sample_size = 0.20
