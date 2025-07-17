@@ -58,9 +58,9 @@ class FileCreator:
         
     def load_last_run(self) :
         self.load_most_recent_run_directory()
-        subredditsDataFrame = pd.read_csv(f'{self.directory}/All_SubredditsDataFrame.csv',index_col=0)
-        submissionsDataFrame = pd.read_csv(f'{self.directory}/All_SubmissionsDataFrame.csv',index_col=0)
-        commentsDataFrame = pd.read_csv(f'{self.directory}/All_CommentsDataFrame.csv',index_col=0)
+        subredditsDataFrame = pd.read_csv(f'{self.directory}/All_SubredditsDataFrame.csv', index_col=0)
+        submissionsDataFrame = pd.read_csv(f'{self.directory}/All_SubmissionsDataFrame.csv', index_col=0)
+        commentsDataFrame = pd.read_csv(f'{self.directory}/All_CommentsDataFrame.csv', index_col=0)
         return {
             "subreddits": subredditsDataFrame,
             "submissions": submissionsDataFrame,
